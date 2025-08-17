@@ -5,37 +5,46 @@ import session from "express-session";
 import bcrypt from "bcrypt";
 import dotenv from "dotenv";
 
-// Load env variables
-dotenv.config();
+// Load .env (only in local dev, not in Render)
+if (process.env.NODE_ENV !== "production") {
+  dotenv.config();
+}
 
 const app = express();
 const port = process.env.PORT || 3000;
 
-// PostgreSQL connection
-const db = new pg.Client({
-  user: process.env.DB_USER,
-  host: process.env.DB_HOST,
-  database: process.env.DB_NAME,
-  password: process.env.DB_PASSWORD,
-  port: process.env.DB_PORT,
-});
-db.connect();
+// ================= DATABASE =================
+const dbConfig = {
+  connectionString:
+    process.env.DATABASE_URL ||
+    `postgresql://${process.env.DB_USER}:${process.env.DB_PASSWORD}@localhost:5432/${process.env.DB_NAME}`,
+  ssl:
+    process.env.NODE_ENV === "production"
+      ? { rejectUnauthorized: false }
+      : false,
+};
 
-// View engine + middleware
+const db = new pg.Client(dbConfig);
+
+db.connect()
+  .then(() => console.log("✅ Connected to PostgreSQL"))
+  .catch((err) => console.error("❌ DB Connection Error:", err));
+
+// ================= APP SETUP =================
 app.set("view engine", "ejs");
 app.use(express.static("public"));
 app.use(bodyParser.urlencoded({ extended: true }));
 
-// Session
+// ================= SESSION =================
 app.use(
   session({
-    secret: process.env.SESSION_SECRET,
+    secret: process.env.SESSION_SECRET || "local-secret-key",
     resave: false,
     saveUninitialized: true,
   })
 );
 
-// Middleware: check login
+// ================= AUTH MIDDLEWARE =================
 function requireLogin(req, res, next) {
   if (!req.session.user) return res.redirect("/login");
   next();
@@ -43,10 +52,9 @@ function requireLogin(req, res, next) {
 
 // ================= ROUTES =================
 
-// Home page (events list)
+// Home
 app.get("/", async (req, res) => {
-  let events;
-
+  let events = [];
   if (req.session.user) {
     if (req.session.user.role === "admin") {
       const result = await db.query("SELECT * FROM events ORDER BY date ASC");
@@ -58,14 +66,9 @@ app.get("/", async (req, res) => {
       );
       events = result.rows;
     }
-  } else {
-    events = [];
   }
-
   res.render("index", { user: req.session.user, events });
 });
-
-// ================= AUTH =================
 
 // Signup
 app.get("/signup", (req, res) => res.render("signup"));
@@ -81,13 +84,11 @@ app.post("/signup", async (req, res) => {
         "⚠️ Username already taken. <a href='/signup'>Try another</a>"
       );
     }
-
     const hashed = await bcrypt.hash(password, 10);
     await db.query(
       "INSERT INTO users (username, password, role) VALUES ($1, $2, $3)",
       [username, hashed, role || "user"]
     );
-
     res.redirect("/login");
   } catch (err) {
     console.error(err);
@@ -103,7 +104,6 @@ app.post("/login", async (req, res) => {
   const result = await db.query("SELECT * FROM users WHERE username=$1", [
     username,
   ]);
-
   if (result.rows.length > 0) {
     const user = result.rows[0];
     const match = await bcrypt.compare(password, user.password);
@@ -112,7 +112,6 @@ app.post("/login", async (req, res) => {
       return res.redirect("/");
     }
   }
-
   res.send("Invalid credentials. <a href='/login'>Try again</a>");
 });
 
@@ -121,9 +120,7 @@ app.get("/logout", (req, res) => {
   req.session.destroy(() => res.redirect("/"));
 });
 
-// ================= EVENTS =================
-
-// Create event (user)
+// Create event
 app.get("/create-event", requireLogin, (req, res) => {
   res.render("create-event", { user: req.session.user });
 });
@@ -131,12 +128,10 @@ app.get("/create-event", requireLogin, (req, res) => {
 app.post("/create-event", requireLogin, async (req, res) => {
   const { title, date, location } = req.body;
   const userId = req.session.user.id;
-
   await db.query(
     "INSERT INTO events (title, date, location, user_id) VALUES ($1, $2, $3, $4)",
     [title, date, location, userId]
   );
-
   res.redirect("/");
 });
 
@@ -144,45 +139,37 @@ app.post("/create-event", requireLogin, async (req, res) => {
 app.post("/book/:id", requireLogin, async (req, res) => {
   const eventId = req.params.id;
   const userId = req.session.user.id;
-
   await db.query("INSERT INTO bookings (user_id, event_id) VALUES ($1, $2)", [
     userId,
     eventId,
   ]);
-
   res.render("confirmation", { user: req.session.user, eventId });
 });
 
-// ================= ADMIN =================
-
+// Admin
 app.get("/admin", requireLogin, async (req, res) => {
   if (req.session.user.role !== "admin") return res.send("Access denied");
-
   const events = await db.query("SELECT * FROM events ORDER BY date ASC");
   res.render("admin", { user: req.session.user, events: events.rows });
 });
 
 app.post("/admin/add", requireLogin, async (req, res) => {
   if (req.session.user.role !== "admin") return res.send("Access denied");
-
   const { title, date, location } = req.body;
   await db.query(
     "INSERT INTO events (title, date, location) VALUES ($1,$2,$3)",
     [title, date, location]
   );
-
   res.redirect("/admin");
 });
 
 app.post("/admin/delete/:id", requireLogin, async (req, res) => {
   if (req.session.user.role !== "admin") return res.send("Access denied");
-
   await db.query("DELETE FROM events WHERE id=$1", [req.params.id]);
   res.redirect("/admin");
 });
 
 // ================= SERVER =================
-
 app.listen(port, () =>
   console.log(`✅ Server running at http://localhost:${port}`)
 );
