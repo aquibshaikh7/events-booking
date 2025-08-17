@@ -1,0 +1,19 @@
+CREATE TABLE users (
+  id SERIAL PRIMARY KEY,
+  username VARCHAR(100) UNIQUE NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  role VARCHAR(10) DEFAULT 'user'
+);
+
+CREATE TABLE events (
+  id SERIAL PRIMARY KEY,
+  title VARCHAR(255) NOT NULL,
+  date DATE NOT NULL,
+  location VARCHAR(255) NOT NULL
+);
+
+CREATE TABLE bookings (
+  id SERIAL PRIMARY KEY,
+  user_id INT REFERENCES users(id) ON DELETE CASCADE,
+  event_id INT REFERENCES events(id) ON DELETE CASCADE
+);
