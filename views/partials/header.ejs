@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Eventify</title>
+    <link rel="stylesheet" href="/style.css" />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <header class="navbar">
+      <a href="/" class="logo">🎉 Eventify</a>
+      <nav>
+        <% if (typeof user !== "undefined" && user) { %>
+        <span>Welcome, <%= user.username %></span>
+        <a href="/logout" class="btn">Logout</a>
+        <% if (user.role === 'admin') { %>
+        <a href="/admin" class="btn">Admin Panel</a>
+        <% } %> <% } else { %>
+        <a href="/login" class="btn">Login</a>
+        <a href="/signup" class="btn">Signup</a>
+        <% } %>
+      </nav>
+    </header>
+
+    <main class="container"></main>
+  </body>
+</html>

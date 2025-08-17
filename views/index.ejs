@@ -1,0 +1,36 @@
+<%- include("partials/header.ejs") %> <% if (!user) { %>
+<h1 class="title">Welcome to Eventify 🎉</h1>
+<p class="no-events">
+  Please <a href="/signup" class="btn">Signup</a> to register your own events
+  and <a href="/login" class="btn">Login</a> to view them.
+</p>
+<% } else { %>
+<h1 class="title">
+  <% if (user.role === "admin") { %> All Registered Events <% } else { %> Your
+  Events <% } %>
+</h1>
+
+<% if (events.length > 0) { %>
+<div class="event-grid">
+  <% events.forEach(event => { %>
+  <div class="event-card">
+    <h2><%= event.title %></h2>
+    <p><strong>Date:</strong> <%= new Date(event.date).toDateString() %></p>
+    <p><strong>Location:</strong> <%= event.location %></p>
+
+    <% if (user.role === "user") { %>
+    <form action="/book/<%= event.id %>" method="post">
+      <button class="book-btn">Book Now</button>
+    </form>
+    <% } %>
+  </div>
+  <% }) %>
+</div>
+<% } else { %>
+<p class="no-events">
+  <% if (user.role === "admin") { %> No events registered yet. <% } else { %>
+  You haven’t created any events yet.
+  <a href="/create-event" class="btn">Create One</a>
+  <% } %>
+</p>
+<% } %> <% } %> <%- include("partials/footer.ejs") %>
