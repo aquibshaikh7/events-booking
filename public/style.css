@@ -204,3 +204,141 @@ button:hover {
   color: white;
   text-decoration: none;
 }
+
+/*  */
+/* ============================= */
+/* Responsive Design Media Queries */
+/* ============================= */
+
+/* Tablets (max-width: 992px) */
+@media (max-width: 992px) {
+  .navbar {
+    flex-direction: column;
+    align-items: flex-start;
+    padding: 15px;
+  }
+
+  .navbar nav {
+    margin-top: 10px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .container {
+    padding: 20px;
+  }
+
+  .title {
+    font-size: 1.8rem;
+  }
+
+  .event-grid {
+    gap: 15px;
+  }
+
+  .form {
+    max-width: 500px;
+  }
+}
+
+/* Mobile Landscape & Small Tablets (max-width: 768px) */
+@media (max-width: 768px) {
+  .navbar {
+    padding: 12px 20px;
+  }
+
+  .navbar .logo {
+    font-size: 1.3rem;
+  }
+
+  .navbar nav a,
+  .navbar nav span {
+    font-size: 0.9rem;
+    margin-left: 10px;
+  }
+
+  .title {
+    font-size: 1.6rem;
+  }
+
+  .event-card {
+    padding: 15px;
+  }
+
+  .event-card h2 {
+    font-size: 1.2rem;
+  }
+
+  .book-btn {
+    padding: 8px 14px;
+    font-size: 0.9rem;
+  }
+
+  .form {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .form input,
+  .form select {
+    width: 100%;
+    min-width: unset;
+  }
+}
+
+/* Small Mobile Phones (max-width: 576px) */
+@media (max-width: 576px) {
+  body {
+    padding: 10px;
+  }
+
+  .navbar {
+    padding: 10px 15px;
+  }
+
+  .navbar .logo {
+    font-size: 1.2rem;
+  }
+
+  .navbar nav {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 6px;
+  }
+
+  .container {
+    padding: 15px;
+  }
+
+  .title {
+    font-size: 1.4rem;
+    margin-bottom: 20px;
+  }
+
+  .event-grid {
+    grid-template-columns: 1fr; /* single column */
+    gap: 12px;
+  }
+
+  .event-card {
+    padding: 12px;
+  }
+
+  .form {
+    width: 100%;
+    margin: 15px auto;
+  }
+
+  .form input,
+  .form select {
+    font-size: 14px;
+    height: 45px;
+    padding: 8px 12px;
+  }
+
+  button {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+}
